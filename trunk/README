@@ -1,1 +1,132 @@
 
+SNIVEL - a live event viewer for Snort
+
+
+ABSTRACT
+
+Snivel does an effect "tail -f" on Snort event files (Unified2). Depending on
+how your run it, Snivel either prints the events to the console or sends them
+to a web-browser (using Web 2.0 XMLhttp).
+
+
+BUILDING
+
+Building on Linux is typical. Just type "make" to run the "snivel/makefile"
+and the binary will be saved in "snivel/bin". Same applies for Cygwin.
+
+Building on Windows is typical. Just open the VisualStudio 2010 solution
+"snivel/vs10/snivel.sln" and build. The release binary will be put
+in "snivel/bin".
+
+If two builds above don't apply to you, just compile the *.c files. No special
+compiler or build settings are needed.
+
+
+RUNNING
+
+The simplest way to run Snivel is the following:
+
+    snivel -r /var/log/snort/merged.log
+
+This will open the "merged.log" file produced by Snort and print the events
+to the command line. The output will look the same as the "u2spew" tool
+that comes with the Snort distribution. You can think of Snivel as u2spew
+on steroids.
+
+
+A possibly simpler way to run Snivel is the following:
+
+    snivel -c /etc/snort/snort.conf
+
+This parses the same configuration that Snort uses to write the "merged.log" 
+file in order to find its location, parsing out such configuration options
+as "logdir". If the event files have timstamps in their names (looking like
+"merged.log.1330373358"), then only the latest file will be printed.
+Furthermore, in this mode, Snivel will parse the rules files as well, and
+print the "msg" field along with events.
+
+
+A more useful way of running Snivel is:
+
+    snivel -f -c /etc/snort/snort.conf
+
+This is the same as previous example, but with the "-f" parameter, the 
+program never terminates. Instead, it will continuously monitor the 
+events file(s) and will print new events as soon as they appear. In other
+words, it does a "tail -f" on the event file(s). When files are timestamped,
+then when a new file is created, Snivel will automatically detect this and
+switch to the new file. This is mode is useful for simply watching Snort
+run, such as replaying an attack and seeing it appear live on the screen.
+Of course, you can run Snort so that it prints to the console or other
+output as well, but this tests a running Snort system the way it's supposed
+to run, not some alternate mode.
+
+
+The most useful way of running Snivel is:
+
+    snivel -f -c /etc/snort/snort.conf -h 127.0.0.1:8080
+
+This starts up a built-in HTTP server within Snivel, which you can access
+via your web-browser. Simply browse to "http://127.0.0.1:8080", or
+whichever port/IP address you configured on the command-line. Note that
+configuring for "0.0.0.0" IP address is possible, but discouraged. The 
+web server probably isn't so secure, and the events aren't anonymized,
+exposing private information. One of these days I'll enable something
+better.
+
+
+Y2K, IPv6, and 64-bit support
+
+All timestamps use 4 digits for the year. Any IPv6 events produced by Snort
+are teated the same as IPv4 events produced by Snort. The code compiles
+for either 32-bit or 64-bit.
+
+
+XML API
+
+Your first query will look like
+
+http://127.0.0.1:8080/getevents.xml?instance=0&latest=0
+
+This asks for the latest events in the server (up to 64) with indexes
+greater than 0.
+
+In the response, you'll get an XML structure that looks like the 
+following:
+
+<events instance="1330373358">
+ <event id="0">....</event>
+ <event id="1">....</event>
+ <event id="2">....</event>
+ <event id="3">....</event>
+</events>
+
+This means that, so far, that Snivel has only seen 4 events to give you.
+
+
+Your next query should look like:
+
+http://127.0.0.1:8080/getevents.xml?instance=1330373358&latest=4
+
+The value of "instance" should be the same as you got in your last
+response. This is used to determine if Snivel had to restart. If that
+happened, you'll get an empty response like:
+
+<events instance="1330378772">
+</events>
+
+That means there are no events for the instance you asked for, and that
+the new instance is 1330378772. You should reset your "latest" index
+back to zero, and use this new instance value for new queries.
+
+The new instance may have events that repeat with your existing ones.
+The Snivel "id" will not be the same, because it's a new instance,
+but the Snort "event_id" fields will overlap. You should either wipe
+out your table completely when this happens, or check for duplicates.
+
+
+Asking for the latest gives up to a max of 64 events. If there are still
+holes in the data, you have to ask for them with a query like:
+
+http://127.0.0.1:8080/getevents.xml?instance=1330373358&min=3743&max=3749
+
