@@ -200,47 +200,66 @@ xml_format_unified2_event(struct mg_connection *conn, struct Unified2_Event *e, 
 		buf[0] = '\0';
 		while (id) {
 			memmove(buf+1, buf, strlen(buf)+1);
-			buf[0] = id%10;
+			buf[0] = (id%10) + '0';
 			id /= 10;
 		}
 	}
 	
 
-	mg_printf(conn, "<event id=\"%s\">\r\n", buf);
-	mg_printf(conn, " <type>%u</type>\r\n", e->type);
-	mg_printf(conn, " <ip_version>%u</ip_version>\r\n", e->ip_version);
-	mg_printf(conn, " <event_version>%u</event_version>\r\n", e->event_version);
-    mg_printf(conn, " <sensor_id>%u</sensor_id>\r\n", e->sensor_id);
-    mg_printf(conn, " <event_number>%u</event_number>\r\n", e->event_number);
-    mg_printf(conn, " <event_second>%u</event_second>\r\n", e->event_second);
-    mg_printf(conn, " <event_microsecond>%u</event_microsecond>\r\n", e->event_microsecond);
-    mg_printf(conn, " <signature_id>%u</signature_id>\r\n", e->signature_id);
-	msg = conf_sid_lookup_msg(snivel, e->generator_id, e->signature_id);
-	if (msg == NULL)
-		msg = "";
-    mg_printf(conn, " <msg>%s</msg>\r\n", msg);
+	mg_printf(conn, "<EVENT ID=\"%s\">\r\n", buf);
+    mg_printf(conn, " <SENSORID>%u</SENSORID>\r\n", e->sensor_id);
+    mg_printf(conn, " <EVENTID>%u</EVENTID>\r\n", e->event_number);
 
-    mg_printf(conn, " <generator_id>%u</generator_id>\r\n", e->generator_id);
-    mg_printf(conn, " <signature_revision>%u</signature_revision>\r\n", e->signature_revision);
-    mg_printf(conn, " <classification_id>%u</classification_id>\r\n", e->classification_id);
-    mg_printf(conn, " <priority_id>%u</priority_id>\r\n", e->priority_id);
+	/* Format timestamp */
+	{
+		struct tm *mytm;
+		time_t t = e->event_second;
+		mytm = gmtime(&t);
+		/* Mon, 25 Dec 1995 13:30:00 GMT */
+		strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", mytm);
+		_snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), ".%06u", e->event_microsecond);
+	    mg_printf(conn, " <TIME>%s</TIME>\r\n", buf);
+	}
+
+	msg = conf_sid_lookup_msg(snivel, e->generator_id, e->signature_id);
+	if (msg == NULL) {
+		msg = buf;
+		_snprintf(buf, sizeof(buf), "(%u:%u:%u)", e->generator_id, e->signature_id, e->signature_revision);
+	}
+    mg_printf(conn, " <MSG>%s</MSG>\r\n", msg);
+
+    mg_printf(conn, " <SID>%u</SID>\r\n", e->signature_id);
+    mg_printf(conn, " <GID>%u</GID>\r\n", e->generator_id);
+    mg_printf(conn, " <REV>%u</REV>\r\n", e->signature_revision);
+    mg_printf(conn, " <CLASSIFICATION>%u</CLASSIFICATION>\r\n", e->classification_id);
+    mg_printf(conn, " <PRIORITY>%u</PRIORITY>\r\n", e->priority_id);
 	if (e->ip_version == 4) {
 		_snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
 			e->ip_source[0], e->ip_source[1], e->ip_source[2], e->ip_source[3]);
-		mg_printf(conn, " <ip_source>%u</ip_source>\r\n", e->priority_id);
+		mg_printf(conn, " <IPSRC>%s</IPSRC>\r\n", buf);
 		_snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
 			e->ip_destination[0], e->ip_destination[1], e->ip_destination[2], e->ip_destination[3]);
-		mg_printf(conn, " <ip_destination>%u</ip_destination>\r\n", e->priority_id);
+		mg_printf(conn, " <IPDST>%s</IPDST>\r\n", buf);
+	} else if (e->ip_version == 6) {
+		format_ipv6_address(buf, sizeof(buf), e->ip_source);
+		mg_printf(conn, " <IPSRC>%s</IPSRC>\r\n", buf);
+		format_ipv6_address(buf, sizeof(buf), e->ip_destination);
+		mg_printf(conn, " <IPDST>%s</IPDST>\r\n", buf);
 	}
-    mg_printf(conn, " <sport_itype>%u</sport_itype>\r\n", e->sport_itype);
-    mg_printf(conn, " <dport_icode>%u</dport_icode>\r\n", e->dport_icode);
-    mg_printf(conn, " <protocol>%u</protocol>\r\n", e->protocol);
-    mg_printf(conn, " <impact_flag>%u</impact_flag>\r\n", e->impact_flag);
-    mg_printf(conn, " <impact>%u</impact>\r\n", e->impact);
-    mg_printf(conn, " <blocked>%u</blocked>\r\n", e->blocked);
-    mg_printf(conn, " <mpls_label>%u</mpls_label>\r\n", e->mpls_label);
-    mg_printf(conn, " <vlan_id>%u</vlan_id>\r\n", e->vlan_id);
-    mg_printf(conn, " <pad>%u</pad>\r\n", e->pad);
+    mg_printf(conn, " <SPORT>%u</SPORT>\r\n", e->sport_itype);
+    mg_printf(conn, " <DPORT>%u</DPORT>\r\n", e->dport_icode);
+    mg_printf(conn, " <PROTO>%u</PROTO>\r\n", e->protocol);
+	if (e->impact_flag)
+		mg_printf(conn, " <impact_flag>%u</impact_flag>\r\n", e->impact_flag);
+    mg_printf(conn, " <IMPACT>%u</IMPACT>\r\n", e->impact);
+	if (e->blocked)
+	    mg_printf(conn, " <blocked>%u</blocked>\r\n", e->blocked);
+	if (e->mpls_label)
+		mg_printf(conn, " <mpls_label>%u</mpls_label>\r\n", e->mpls_label);
+	if (e->vlan_id)
+		mg_printf(conn, " <vlan_id>%u</vlan_id>\r\n", e->vlan_id);
+	if (e->pad)
+		mg_printf(conn, " <pad>%u</pad>\r\n", e->pad);
 
 	/*uint8_t		policy_uuid[16];
     uint32_t	user_id;
@@ -254,7 +273,7 @@ xml_format_unified2_event(struct mg_connection *conn, struct Unified2_Event *e, 
     uint8_t		security_zone_ingress_uuid[16];
     uint8_t		security_zone_egress_uuid[16];*/
 
-	mg_printf(conn, "</event>\r\n");
+	mg_printf(conn, "</EVENT>\r\n");
 }
 
 
@@ -290,10 +309,13 @@ get_events(struct mg_connection *conn, const struct mg_request_info *ri,
 	mg_header_printf(conn,
 			"HTTP/1.0 200 ok\r\n"
 			"Content-Type: text/xml\r\n"
-			"Server: hamster/2.0\r\n"
+			"Server: snivel/0.1\r\n"
+			"Refresh: 10\r\n"
 			"\r\n");
 	
 	mg_printf(conn, "<?xml version=\"1.0\" ?>\r\n");
+	//mg_printf(conn, "<?xml-stylesheet href=\"events.css\" title=\"Default style\"?>\r\n");
+	mg_printf(conn, "<?xml-stylesheet type=\"text/xsl\" href=\"events.xsl\"?>\r\n");
 
 	/*
 	 * Do the 'instance' processing. This is so that the client can detect
@@ -309,8 +331,8 @@ get_events(struct mg_connection *conn, const struct mg_request_info *ri,
 		/* Wrong instance, so return empty list. Client should take the
 		 * hint and reset its instance ID */
 		if (instance != snivel->httpd.instance) {
-			mg_printf(conn, "<events instance=\"%u\">\r\n", snivel->httpd.instance);
-			mg_printf(conn, "</events>\r\n");
+			mg_printf(conn, "<EVENTS instance=\"%u\">\r\n", snivel->httpd.instance);
+			mg_printf(conn, "</EVENTS>\r\n");
 		}
 	}
 
@@ -339,8 +361,8 @@ get_events(struct mg_connection *conn, const struct mg_request_info *ri,
 
 		/* If no latest event, return an empty list */
 		if (i >= 1000) {
-			mg_printf(conn, "<events instance=\"%u\">\r\n", snivel->httpd.instance);
-			mg_printf(conn, "</events>\r\n");
+			mg_printf(conn, "<EVENTS instance=\"%u\">\r\n", snivel->httpd.instance);
+			mg_printf(conn, "</EVENTS>\r\n");
 			return;
 		}
 	}
@@ -350,8 +372,8 @@ get_events(struct mg_connection *conn, const struct mg_request_info *ri,
 	 * If there are no events, then return an empty list 
 	 */
 	if (snivel->queue_head == 0) {
-		mg_printf(conn, "<events instance=\"%u\">\r\n", snivel->httpd.instance);
-		mg_printf(conn, "</events>\r\n");
+		mg_printf(conn, "<EVENTS instance=\"%u\">\r\n", snivel->httpd.instance);
+		mg_printf(conn, "</EVENTS>\r\n");
 		return;
 	}
 
@@ -362,10 +384,10 @@ get_events(struct mg_connection *conn, const struct mg_request_info *ri,
 	if (text != NULL) {
 		max = strtoull(text,0,0);
 		if (max > snivel->queue_head)
-			max = snivel->queue_max;
+			max = snivel->queue_head;
 		mg_free_var(text);
 	} else {
-		max = snivel->queue_max;
+		max = snivel->queue_head;
 	}
 
 	/*
@@ -387,19 +409,18 @@ get_events(struct mg_connection *conn, const struct mg_request_info *ri,
 	}
 
 
-	mg_printf(conn, "<events instance=\"%u\">\r\n", snivel->httpd.instance);
+	mg_printf(conn, "<EVENTS instance=\"%u\">\r\n", snivel->httpd.instance);
 	pixie_enter_critical_section(snivel->queue_cs);
-	for (index=min; index<=max; index++) {
+	for (index=max; index>min; index--) {
 		struct EventQueue *q_item;
-		index %= snivel->queue_max;
-		q_item = &snivel->queue[index];
+		q_item = &snivel->queue[(index-1)%snivel->queue_max];
 
 		if (q_item->e.u2_event) {
 			xml_format_unified2_event(conn, q_item->e.u2_event, q_item->id, snivel);
 		}
 	}
 	pixie_leave_critical_section(snivel->queue_cs);
-	mg_printf(conn, "</events>\r\n");
+	mg_printf(conn, "</EVENTS>\r\n");
 }
 
 
@@ -424,6 +445,7 @@ httpd_init(struct Snivel *snivel)
 
 	snivel->queue_max = 8192;
 	snivel->queue = (struct EventQueue *)malloc(snivel->queue_max * sizeof(*snivel->queue));
+	memset(snivel->queue, 0, snivel->queue_max * sizeof(*snivel->queue));
 	snivel->queue_head = 0;
 	
 

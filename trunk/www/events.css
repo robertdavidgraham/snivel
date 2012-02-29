@@ -1,0 +1,21 @@
+SENSORID, EVENTID, TIME, MSG, GID, SID, REV, CLASSIFICATION, PRIORITY, SPORT, DPORT, IPSRC, IPDST, PROTO, IMPACT
+{
+    font-family: sans-serif; 
+    background: white; 
+    color: black;
+    display: table-cell;
+    padding: 4 4 4 4;
+    border-width: thin;
+    border-style: solid;
+    border-collapse:collapse;
+}
+
+EVENTS 
+{
+    display: table;
+}
+
+EVENT
+{
+    display: table-row;
+}

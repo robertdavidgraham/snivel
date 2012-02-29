@@ -23,6 +23,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README" />
+    <None Include="..\www\events.css" />
+    <None Include="..\www\events.xsl" />
+    <None Include="..\www\index.html" />
+    <None Include="..\www\snivel.js" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\keyword.h" />

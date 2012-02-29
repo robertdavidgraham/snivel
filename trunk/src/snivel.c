@@ -152,7 +152,7 @@ is_later_file(const struct Snivel *snivel, const char *filename)
 	const char *latest_number;
 
 	/* If there aren't file timestamps, then no later file */
-	if (snivel->log[0].nostamp)
+	if (snivel->log[0].nostamp || snivel->logdir == NULL)
 		return 0;
 
 	/* look for last '.' in "merged.log.00000" */

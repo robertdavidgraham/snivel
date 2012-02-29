@@ -44,11 +44,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\README">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\src\unified2-format.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -64,5 +59,22 @@
     <ClInclude Include="..\src\snivel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\www\index.html">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\www\snivel.js">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\www\events.css">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\www\events.xsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
