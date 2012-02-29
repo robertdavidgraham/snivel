@@ -2,9 +2,18 @@ var xmlhttp = null;
 var latest = 0;
 var waiting_for_events = false;
 
+function do_alert()
+{
+    alert("hello");
+}
+
+var t = setTimeout("do_alert()", 1000);
+
+var foo = "bar";
+
 function refresh_xml(url, handle_response)
 {
-    if (xmlhttp == NULL) {
+    if (xmlhttp == null) {
 	    if (window.XMLHttpRequest) {
 		    // code for IE7, Firefox, Mozilla, etc.
 		    xmlhttp=new XMLHttpRequest();
@@ -23,16 +32,18 @@ function refresh_xml(url, handle_response)
 }
 
 
-function refresh()
+function refresh_table()
 {
+    alert("refresh_table()");
     if (waiting_for_events == false) {
         waiting_for_events = true;
     	refresh_xml("getevents.xml?latest="+latest, handle_events);
     }
 }
 
+var elementlist = ["PRIORITY", "TIME", "IPSRC", "SPORT", "IPDST", "DPORT", "MSG", "CLASSIFICATION"];
 
-function handle_bssid_item()
+function handle_events()
 {
 	var update;
 	var bases;
@@ -56,80 +67,50 @@ function handle_bssid_item()
         waiting_for_events = false;
 		return;
 	}
-	if (update.nodeName != "events") {
+	if (update.nodeName != "EVENTS") {
 		alert("no EVENTS element");
         waiting_for_events = false;
 		return; // corrupt XML contents
 	}
 
 	// Get the EVENTS information
-	base = update.getElementsByTagName("events")[0];
-	events = stationlist.getElementsByTagName("event");
+	events = update.getElementsByTagName("EVENT");
 
+    table = document.getElementById("eventlist");
+
+    if (events)
 	for (i=0; i<events.length; i++) {
 		var e = events[i];
         var row;
+        var j;
 
         row = document.createElement("div");
-        row.setAttribute("id", e.getAttribute("id"));
-        row.innertHtml = '<div class="address">'
-                        + e.getE
+        row.setAttribute("ID", e.getAttribute("ID"));
+        row.setAttribute("class", "event");
 
-		rowId = sta.getAttribute("id");
-		
-		// See if the row exists
-		table = document.getElementById("eventlist");
-		if (!table) {
-			alert("No event table");
-		}
+        for (j=0; j < elementlist.length; j++) {
+            var t = document.createTextNode(e.getElementsByTagName(elementlist[j])[0].firstChild.nodeValue);
+            var col = document.createElement("div");
+            col.appendChild(t);
 
+            col.setAttribute("class", elementlist[j]);
+            
+            row.appendChild(col);
+        }
 
-
+        
         if (!table.hasChildNodes()) {
             var item = document.createElement("div");
             item.setAttribute("id", "row_headers");
             item.innerHtml = '<div id="col_src">Source</div><div id="col_dst">Destination</div><div id="col_msg">Msg</div>';
             table.appendChild(item);
+            alert(table.length);
+            table.appendChild(row);
+        } else {
+            alert(row.innerHtml);
+            table.appendChild(row);
         }
 
-        
-
-		if (!table.rows[rowId]) {
-			var row;
-			var z = rowId;
-
-			try {
-			z = sta.getElementsByTagName("macaddr")[0].firstChild.nodeValue;
-
-			table.insertRow(1);
-			row = table.rows[1];
-			row.innerHTML =
-                    '<div id="'+rowId 
-						  '<td id="station" class="station"><a href="/station/'+rowId+'.html">'+z+'</a></td>' +
-						  '<td id="stamanuf" class="stamanuf"></td>' +
-						  '<td id="power" class="power"></td>' +
-						  '<td id="dataout" class="dataout"></td>' +
-						  '<td id="datain"  class="datain" ></td>' +
-						  '<td id="ctrlout" class="ctrlout"></td>' +
-						  '<td id="ctrlin"  class="ctrlin" ></td>' +
-						  '<td id="info" class="info"></td>'
-							;
-			} catch (er) {
-				alert(er);
-			}
-			row.id = rowId;
-		}
-
-		var changes = 0;
-
-		changes += xml_update_cell("stationlist", "stamanuf", sta);
-		changes += xml_update_cell("stationlist", "power", sta);
-		changes += xml_update_cell("stationlist", "dataout", sta);
-		changes += xml_update_cell("stationlist", "datain", sta);
-		changes += xml_update_cell("stationlist", "ctrlout", sta);
-		changes += xml_update_cell("stationlist", "ctrlin", sta);
-		changes += xml_update_cell("stationlist", "info", sta);
 	}
-
 
 }

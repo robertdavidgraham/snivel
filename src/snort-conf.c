@@ -38,10 +38,12 @@
 void
 combine_elements(char *result, unsigned *result_offset, unsigned result_max,
 				 unsigned prefix_length,
-				 const char *filename, unsigned filename_max)
+				 const char *filename, unsigned in_filename_offset, unsigned filename_max)
 {
-	unsigned filename_offset[1] = {0};
+	unsigned filename_offset[1];
 	static const struct Keyword slash = {"/", 1};
+
+	*filename_offset = in_filename_offset;
 
 	while (*filename_offset < filename_max) {
 		struct Keyword element;
@@ -141,8 +143,8 @@ combine_filename(const char *dirname, const char *filename)
 	prefix_length = result_offset;
 
 	/* Combine elements */
-	combine_elements(result, &result_offset, result_max, prefix_length, dirname, dirname_length);
-	combine_elements(result, &result_offset, result_max, prefix_length, filename, filename_length);
+	combine_elements(result, &result_offset, result_max, prefix_length, dirname, dirname_offset, dirname_length);
+	combine_elements(result, &result_offset, result_max, prefix_length, filename, 0, filename_length);
 
 
 	return result;

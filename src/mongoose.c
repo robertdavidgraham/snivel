@@ -1447,6 +1447,7 @@ static const struct {
 	{"shtm",	"text/html"			},
 	{"shtml",	"text/html"			},
 	{"css",		"text/css"			},
+	{"xsl",		"text/xsl"			},
 	{"js",		"application/x-javascript"	},
 	{"ico",		"image/x-icon"			},
 	{"gif",		"image/gif"			},
