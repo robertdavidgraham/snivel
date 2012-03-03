@@ -1,1 +1,120 @@
 
+SNIVEL (Snort Live Event Viewer)
+
+Snivel monitors the "unified2" files produced by Snort, and either prints
+the events to the command-line, or ships view XML to a web browser.
+
+Snort is a well-known open-source intrusion-detection-system. If you don't
+know what Snort is, then you won't care what Snivel does.
+
+Unified2 is Snort's primary logging mechanism. A Snort sensor saves all the
+events, packes, and extra details in these files. Other programs of the 
+Snort ecosystem. For example, you might use "barnyard2" to read these files
+and save the events to an SQL database.
+
+Snivel is a lot like Barnyard2, except that it reads the events and makes
+them available to other parts of the ecosystem via HTTP and XML. This
+could be your web browser, or other applications that want to slurp up
+events using XML and send threm through the XML ecosystem.
+
+
+COMPILING
+
+Just type 'make', or even "gcc *.c -o snivel". There is no 'configure'.
+
+On Windows, there is a VisualStudio 2010 project you can use, but any
+option should work. Just include all the .c files and compile away.
+Even MinGW should work.
+
+You should compile in 64-bit mode. 32-bit mode should also work well
+(file offsets are still done in 64-bits), but 64-bit is the more tested
+default mode.
+
+
+RUNNING
+
+In order to try this out, simply run:
+
+    snivel -r merged.log
+
+This will parse the "merged.log" and print out events onto the console
+in the same format as "u2spew", a tool that comes with the Snort 
+distribution for reading Unified2 files. This isn't useful for anything
+other than making sure that the program is running correctly.
+
+
+The normal way of running it is"
+
+    snivel -f -c /etc/snort/snort.conf -M /etc/snort/sid-msg.map -H 0.0.0.0:1234
+
+The "-c" option works the same way as it does on Snort, except instead of
+using the configuration to write files, Snivel uses it to read the files.
+Configuration settings unrelated to reading the files are ignored.
+
+In particular, it's looking for "config logdir" and "output unified2:" lines.
+
+This option will also parse the Snort rules, looking for "msg:", "sid:", "gid:",
+and "rev:" option-keywords in order to build a message-map. That's because in
+Unified2, only the three numbers (gid,sid,rev) are included in events, but 
+not the human readable "msg". You can also use the "sid-msg.map" produced by
+Snort for the same purpose, using the "-M" option.
+
+
+The "-f" option means the same thing as in "tail -f": it causes Snivel to
+constantly monitor for changes in the file.
+
+The "-H" option is what starts the webserver. If you configure just a port number,
+then the IP address defaults to "127.0.0.1" so that outsiders can't reach it.
+
+
+ACCESSING THE WEBSERVER
+
+The simplest way is:
+
+   http://127.0.0.1:1234/events.xml
+
+This retrieves (up to) the latest 64 events in XML.
+
+This is browser friendly. An XSL tranform is provided so that these will be
+formatted in a pretty table instead of raw XML in the browser. In addition,
+an http-equiv refresh is sent every 10 seconds to constantly refresh the events.
+
+
+If you want to retrieve a specific range, use:
+
+   http://127.0.0.1:1234/events.xml?min=10&max=20
+
+This retrieves the events with an ID between 10 and 20. The ID is a 64-bit
+number inside Snivel that increments for every new event. It's how an external
+application retrieves events.
+
+Note: if the value of "min" is greater than the highest ID, then Snivell will
+hold the TCP connection open until an event arrives, for a maximum of 60 seconds.
+And then, when an event arrives, it returns immediately with that event (instead
+of waiing for enough additional events to fulfill the request).
+
+That means you application only has to poll once per minute, but will still get
+the latest event within a fraction of a second of it being written to a Unified2
+file.
+
+
+You can also try:
+
+    http://127.0.0.1:1234/
+
+In theory, this is a Web 2.0 AJAX application (well, not Apache). It uses
+JavaScript to make a little console within the web page, filtering and searching
+for events. It's not useful as a primary console. For one thing, it can only
+see a maximum of the prior 10,000 events (which are held in memory inside
+Snivel). But within those limits, it could be interesting.
+
+I'm in the middle of writing this JavaScript, so it may not even work in your
+browser, but eventually I'll get something interesting running here. The intent
+isn't to have a good browser app, though. The intent is to provide access to 
+the data via XML, or use as a diangostic tool to make sure your Snort event
+ecosystem is running well.
+
+
+
+
+
