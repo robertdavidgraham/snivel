@@ -175,7 +175,7 @@ PIXIE_FUNCTION pixie_get_proc_symbol(void *library, const char *symbol)
  */
 unsigned pixie_get_mac_address(unsigned char macaddr[6])
 {
-	memset(macaddr, 0, sizeof(macaddr));
+	memset(macaddr, 0, 6);
 #ifdef WIN32
 	{
 		DWORD dwStatus;
@@ -347,7 +347,7 @@ ptrdiff_t pixie_begin_thread(void (*worker_thread)(void*), unsigned flags, void 
 			fprintf(stderr, "pthread_create() err: %s\n", strerror(retval));
 		}
 
-		return thread_id;
+		return (ptrdiff_t)thread_id;
 	}
 #endif
 }
@@ -504,7 +504,7 @@ pixie_spawn_process(
 	char *argarray[32];
 	unsigned arg_count;
 
-	argarray[0] = prog;
+	argarray[0] = (char*)prog;
 	for (arg_count=1; arg_count<15 && *args; arg_count++) {
 		unsigned len;
 		char *a;

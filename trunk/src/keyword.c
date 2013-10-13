@@ -153,7 +153,7 @@ keyword_next_opt_value(const char *line, unsigned *r_offset, unsigned max)
 		result.length--;
 
 	if (*r_offset < max && line[*r_offset] == ';')
-		*r_offset++;
+		(*r_offset)++;
 
 	/* strip trailing whitespace */
 	while (*r_offset < max && my_isspace(line[*r_offset]))
@@ -215,7 +215,6 @@ keyword_get_file_prefix(const char *filename, unsigned *r_offset, unsigned lengt
 	 * if Windows style c:\
 	 */
 	if (my_isalpha(filename[*r_offset]) && (length-*r_offset)>1 && filename[1+*r_offset] == ':') {
-		unsigned len = 2;
 		if (length-*r_offset > 2 && filename[2+*r_offset] == '/') {
 			result.str = filename + *r_offset;
 			result.length = 3;

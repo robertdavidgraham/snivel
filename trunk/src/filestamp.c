@@ -49,7 +49,7 @@ opendir(const char *name)
 	} else if ((dir = (DIR *) malloc(sizeof(*dir))) == NULL) {
 		errno = ENOMEM;
 	} else {
-		_snprintf(path, sizeof(path), "%s/*", name);
+		sprintf(path, sizeof(path), "%s/*", name);
 		dir->handle = FindFirstFileA(path, &dir->info);
 
 		if (dir->handle != INVALID_HANDLE_VALUE) {

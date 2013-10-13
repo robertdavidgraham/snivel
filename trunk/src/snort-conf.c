@@ -101,7 +101,6 @@ combine_filename(const char *dirname, const char *filename)
 	unsigned dirname_length;
 	unsigned filename_length;
 	unsigned dirname_offset = 0;
-	unsigned filename__offset = 0;
 	unsigned result_offset = 0;
 	unsigned result_max;
 	static const struct Keyword slash = {"/", 1};
@@ -179,7 +178,6 @@ char *
 fgets_autogrow(char **line, size_t *line_length, FILE *fp, size_t offset)
 {
 	char *p;
-	size_t bytes_read = 0;
 
 	/* Do the initial read into the buffer */
 	p = fgets(*line+offset, *line_length-offset, fp);
@@ -591,9 +589,9 @@ conf_set_logdir(struct Snivel *snivel, const char *filename, unsigned filename_l
 	 * Check logging dir
 	 */
 	{
-		struct _stat s;
+		struct stat s;
 
-		if (_stat(snivel->logdir, &s) != 0) {
+		if (stat(snivel->logdir, &s) != 0) {
 			fprintf(stderr, "logdir: directory invalid\n");
 			perror(snivel->logdir);
 			exit(1);
@@ -679,7 +677,8 @@ conf_read_unified2(struct Snivel *snivel, const char *line, unsigned offset, uns
 
 /***************************************************************************
  ****************************************************************************/
-static is_variable_char(const char c)
+static int
+is_variable_char(const char c)
 {
 	if (isalnum(c&0xFF))
 		return 1;
@@ -911,7 +910,8 @@ conf_set_logfilename(struct Snivel *snivel, const char *filename, size_t filenam
 	struct Logfile *file;
 
 	if (snivel->log_count >= sizeof(snivel->log)/sizeof(snivel->log[0])) {
-		fprintf(stderr, "set log filename: too many names, ignoring %.*s\n", filename_length, filename);
+		fprintf(stderr, "set log filename: too many names, ignoring %.*s\n", 
+                (int)filename_length, filename);
 		return;
 	} else 
 		file = &snivel->log[snivel->log_count++];

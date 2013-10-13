@@ -140,18 +140,18 @@ void unified2_spew_event(const struct Snivel *snivel, const struct Unified2_Even
 	 * Format the addresses
 	 */
 	if (e->ip_version == 4) {
-		_snprintf(dst, sizeof(dst), "%u.%u.%u.%u", 
+		snprintf(dst, sizeof(dst), "%u.%u.%u.%u", 
 			e->ip_destination[0], e->ip_destination[1], 
 			e->ip_destination[2], e->ip_destination[3]); 
-		_snprintf(src, sizeof(src), "%u.%u.%u.%u", 
+		snprintf(src, sizeof(src), "%u.%u.%u.%u", 
 			e->ip_source[0], e->ip_source[1], 
 			e->ip_source[2], e->ip_source[3]);
 	} else if (e->ip_version == 6) {
 		format_ipv6_address(dst, sizeof(dst), e->ip_destination);
 		format_ipv6_address(src, sizeof(src), e->ip_destination);
 	} else {
-		_snprintf(dst, sizeof(dst), "(err)");
-		_snprintf(src, sizeof(src), "(err)");
+		snprintf(dst, sizeof(dst), "(err)");
+		snprintf(src, sizeof(src), "(err)");
 	}
 
 	/*
@@ -163,7 +163,7 @@ void unified2_spew_event(const struct Snivel *snivel, const struct Unified2_Even
 	case UNIFIED2_IPV4_EVENT3: printf("\n(Event NG) %s\n", msg); break;
 	case UNIFIED2_IPV6_EVENT1: printf("\n(IPv6 Event) %s\n", msg); break;
 	case UNIFIED2_IPV6_EVENT2: printf("\n(IPv6 Event) %s\n", msg); break;
-	case UNIFIED2_IPV6_EVENT3: printf("\n(IPv6 NGFW Event)\n", msg); break;
+	case UNIFIED2_IPV6_EVENT3: printf("\n(IPv6 NGFW Event) %s\n", msg); break;
 	default: printf("\n(Unknown Event) %s\n", msg); break;
 	}
 
