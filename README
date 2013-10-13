@@ -2,20 +2,26 @@
 SNIVEL (Snort Live Event Viewer)
 
 Snivel monitors the "unified2" files produced by Snort, and either prints
-the events to the command-line, or ships view XML to a web browser.
+the events to the command-line, or sends XML/JSON to a web browser.
 
 Snort is a well-known open-source intrusion-detection-system. If you don't
 know what Snort is, then you won't care what Snivel does.
 
 Unified2 is Snort's primary logging mechanism. A Snort sensor saves all the
 events, packes, and extra details in these files. Other programs of the 
-Snort ecosystem. For example, you might use "barnyard2" to read these files
-and save the events to an SQL database.
+Snort ecosystem read the Unified2 files. For example, you might use "barnyard2"
+to read these files and save the events to an SQL database.
 
-Snivel is a lot like Barnyard2, except that it reads the events and makes
-them available to other parts of the ecosystem via HTTP and XML. This
-could be your web browser, or other applications that want to slurp up
-events using XML and send threm through the XML ecosystem.
+Snivel is a lot like Barnyard2, in that it consumes the events. Instead of
+saving to a database, it simply formats the events in XML/JSON and makes them
+available for other tools to important into a database. In other words, this
+tool just solves the problem of parsing the Unified2 format and no other
+problem.
+
+In addition to grabbin the XML/JSON data via scripts, you can connect to the
+HTTP port using a web-browser. This is useful in order to tap into the events
+and see what's going on, especially with a new Snort installation to make
+sure things are running.
 
 
 COMPILING
@@ -47,9 +53,10 @@ The normal way of running it is"
 
     snivel -f -c /etc/snort/snort.conf -M /etc/snort/sid-msg.map -H 0.0.0.0:1234
 
-The "-c" option works the same way as it does on Snort, except instead of
-using the configuration to write files, Snivel uses it to read the files.
-Configuration settings unrelated to reading the files are ignored.
+The "-c" reads the same configuration file as Snort, looking for the the files
+that Snort is writing to. Thus, when you install Snort, you don't have to read
+its configuration file to find where the output is being sent, because Snivel
+will do that for you.
 
 In particular, it's looking for "config logdir" and "output unified2:" lines.
 
@@ -59,12 +66,12 @@ Unified2, only the three numbers (gid,sid,rev) are included in events, but
 not the human readable "msg". You can also use the "sid-msg.map" produced by
 Snort for the same purpose, using the "-M" option.
 
-
 The "-f" option means the same thing as in "tail -f": it causes Snivel to
 constantly monitor for changes in the file.
 
-The "-H" option is what starts the webserver. If you configure just a port number,
-then the IP address defaults to "127.0.0.1" so that outsiders can't reach it.
+The "-H" option is what starts the webserver. If you configure just a port 
+number, then the IP address defaults to "127.0.0.1" so that outsiders can't
+reach it.
 
 
 ACCESSING THE WEBSERVER
@@ -89,13 +96,13 @@ number inside Snivel that increments for every new event. It's how an external
 application retrieves events.
 
 Note: if the value of "min" is greater than the highest ID, then Snivell will
-hold the TCP connection open until an event arrives, for a maximum of 60 seconds.
-And then, when an event arrives, it returns immediately with that event (instead
-of waiing for enough additional events to fulfill the request).
+hold the TCP connection open until an event arrives, for a maximum of 60 
+seconds. And then, when an event arrives, it returns immediately with that 
+event (instead of waiting for enough additional events to fulfill the request).
 
-That means you application only has to poll once per minute, but will still get
-the latest event within a fraction of a second of it being written to a Unified2
-file.
+That means you application only has to poll once per minute, but will still
+get the latest event within a fraction of a second of it being written to a 
+Unified2 file.
 
 
 You can also try:
@@ -103,10 +110,10 @@ You can also try:
     http://127.0.0.1:1234/
 
 In theory, this is a Web 2.0 AJAX application (well, not Apache). It uses
-JavaScript to make a little console within the web page, filtering and searching
-for events. It's not useful as a primary console. For one thing, it can only
-see a maximum of the prior 10,000 events (which are held in memory inside
-Snivel). But within those limits, it could be interesting.
+JavaScript to make a little console within the web page, filtering and 
+searching for events. It's not useful as a primary console. For one thing, it 
+can only see a maximum of the prior 10,000 events (which are held in memory 
+inside Snivel). But within those limits, it could be interesting.
 
 I'm in the middle of writing this JavaScript, so it may not even work in your
 browser, but eventually I'll get something interesting running here. The intent

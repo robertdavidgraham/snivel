@@ -217,14 +217,14 @@ xml_format_unified2_event(struct mg_connection *conn, struct Unified2_Event *e, 
 		mytm = gmtime(&t);
 		/* Mon, 25 Dec 1995 13:30:00 GMT */
 		strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", mytm);
-		_snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), ".%06u", e->event_microsecond);
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), ".%06u", e->event_microsecond);
 	    mg_printf(conn, " <TIME>%s</TIME>\r\n", buf);
 	}
 
 	msg = conf_sid_lookup_msg(snivel, e->generator_id, e->signature_id);
 	if (msg == NULL) {
 		msg = buf;
-		_snprintf(buf, sizeof(buf), "(%u:%u:%u)", e->generator_id, e->signature_id, e->signature_revision);
+		snprintf(buf, sizeof(buf), "(%u:%u:%u)", e->generator_id, e->signature_id, e->signature_revision);
 	}
     mg_printf(conn, " <MSG>%s</MSG>\r\n", msg);
 
@@ -234,10 +234,10 @@ xml_format_unified2_event(struct mg_connection *conn, struct Unified2_Event *e, 
     mg_printf(conn, " <CLASSIFICATION>%u</CLASSIFICATION>\r\n", e->classification_id);
     mg_printf(conn, " <PRIORITY>%u</PRIORITY>\r\n", e->priority_id);
 	if (e->ip_version == 4) {
-		_snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
+		snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
 			e->ip_source[0], e->ip_source[1], e->ip_source[2], e->ip_source[3]);
 		mg_printf(conn, " <IPSRC>%s</IPSRC>\r\n", buf);
-		_snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
+		snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
 			e->ip_destination[0], e->ip_destination[1], e->ip_destination[2], e->ip_destination[3]);
 		mg_printf(conn, " <IPDST>%s</IPDST>\r\n", buf);
 	} else if (e->ip_version == 6) {
@@ -286,6 +286,7 @@ void sleep_ms(unsigned ms)
 	Sleep(ms);
 }
 #else
+#include <unistd.h>
 void sleep_ms(unsigned ms)
 {
 	usleep(ms*1000);
@@ -449,8 +450,8 @@ httpd_init(struct Snivel *snivel)
 	snivel->queue_head = 0;
 	
 
-	_snprintf(listen_port, sizeof(listen_port), "%u", snivel->httpd.port);
-	_snprintf(listen_ip, sizeof(listen_ip), "%u.%u.%u.%u", 
+	snprintf(listen_port, sizeof(listen_port), "%u", snivel->httpd.port);
+	snprintf(listen_ip, sizeof(listen_ip), "%u.%u.%u.%u", 
 		(snivel->httpd.ip_address>>24)&0xFF,
 		(snivel->httpd.ip_address>>16)&0xFF,
 		(snivel->httpd.ip_address>> 8)&0xFF,

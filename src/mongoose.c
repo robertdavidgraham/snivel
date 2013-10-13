@@ -1015,11 +1015,7 @@ push(int fd, SOCKET sock, SSL *ssl, const char *buf, uint64_t len)
 		} else if (fd != -1) {
 			n = write(fd, buf + sent, k);
 		} else {
-#ifdef __GNUC__
-			n = send(sock, buf + sent, k, MSG_NOSIGNAL);
-#else
 			n = send(sock, buf + sent, k, 0);
-#endif
 		}
 
 		if (n < 0) {

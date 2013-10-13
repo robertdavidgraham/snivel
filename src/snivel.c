@@ -56,7 +56,9 @@
 #include "snivel.h"
 #include "unified2-format.h"
 #include <sys/stat.h>
-
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 
 
@@ -205,7 +207,7 @@ snivel_decode_file(struct Snivel *snivel, const char *filename)
 		perror(filename);
 		return -1;
 	}
-	fd = _fileno(fp);
+	fd = fileno(fp);
 
 	/*
 	 * Initialize the 'record' structure that we read records into
@@ -218,7 +220,7 @@ snivel_decode_file(struct Snivel *snivel, const char *filename)
 	for (;;) {
 		int x;
 		fpos_t position;
-		struct __stat64 s;
+		struct stat64 s;
 
 		/*
 		 * First, see where we are in the file. If we get a partial record, then
@@ -233,7 +235,7 @@ snivel_decode_file(struct Snivel *snivel, const char *filename)
 		/*
 		 * Now discover if we are behind the maximum
 		 */
-		x = _fstati64(fd, &s);
+		x = fstat64(fd, &s);
 		if (x != 0) {
 			perror(filename);
 			break;
@@ -421,7 +423,6 @@ void
 set_httpd(struct Snivel *snivel, const char *arg)
 {
 	unsigned port = 3333;
-	unsigned ipv4_address = 0x7f000001;
 	unsigned char addr_buf[4];
 	const char *str_port_number;
 	const char *str_ip_address = arg;
