@@ -1,0 +1,3 @@
+Snivel parses the Unified2 events produced by the Snort IDS and displays them on the command-line or in a Web 2.0 browser.
+
+Background: Snort is an open-source IDS that eavesdrops on networks looking for signs of hacker activity. When something is found, an 'event' is stored within a file in a format known as "Unified2". Snivel reads the events out of that file, in a "tail -f" fashion, either printing them to the command-line or sending them to a browser.
